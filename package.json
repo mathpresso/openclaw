@@ -1,19 +1,26 @@
 {
-  "name": "openclaw",
+  "name": "learnclaw",
   "version": "2026.3.3",
-  "description": "Multi-channel AI gateway with extensible messaging integrations",
-  "keywords": [],
-  "homepage": "https://github.com/openclaw/openclaw#readme",
+  "description": "AI-powered learning agent with spaced repetition, knowledge graphs, and adaptive quizzes - built on OpenClaw",
+  "keywords": [
+    "ai-agent",
+    "knowledge-graph",
+    "learning",
+    "obsidian",
+    "spaced-repetition"
+  ],
+  "homepage": "https://github.com/mathpresso/learnclaw#readme",
   "bugs": {
-    "url": "https://github.com/openclaw/openclaw/issues"
+    "url": "https://github.com/mathpresso/learnclaw/issues"
   },
   "license": "MIT",
-  "author": "",
+  "author": "Mathpresso",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/openclaw/openclaw.git"
+    "url": "git+https://github.com/mathpresso/learnclaw.git"
   },
   "bin": {
+    "learnclaw": "openclaw.mjs",
     "openclaw": "openclaw.mjs"
   },
   "directories": {
