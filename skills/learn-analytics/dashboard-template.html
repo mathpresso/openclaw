@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LearnClaw Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --accent: #58a6ff;
+  --green: #3fb950;
+  --orange: #d29922;
+  --red: #f85149;
+  --purple: #bc8cff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+h1 { font-size: 28px; margin-bottom: 8px; }
+.subtitle { color: var(--text-muted); margin-bottom: 24px; font-size: 14px; }
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.stat-label { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-size: 32px; font-weight: 700; margin: 4px 0; }
+.stat-detail { font-size: 13px; color: var(--text-muted); }
+.stat-value.green { color: var(--green); }
+.stat-value.accent { color: var(--accent); }
+.stat-value.orange { color: var(--orange); }
+.stat-value.purple { color: var(--purple); }
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.chart-card h3 { font-size: 16px; margin-bottom: 16px; }
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+.heatmap-cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--border);
+  position: relative;
+}
+.heatmap-cell.l1 { background: #0e4429; }
+.heatmap-cell.l2 { background: #006d32; }
+.heatmap-cell.l3 { background: #26a641; }
+.heatmap-cell.l4 { background: #39d353; }
+.recommendations {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.recommendations h3 { margin-bottom: 12px; }
+.rec-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.rec-item:last-child { border-bottom: none; }
+.rec-icon { font-size: 20px; flex-shrink: 0; }
+.rec-text { font-size: 14px; line-height: 1.5; }
+.rec-text strong { color: var(--accent); }
+.footer {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 24px 0;
+}
+</style>
+</head>
+<body>
+
+<h1>LearnClaw Dashboard</h1>
+<p class="subtitle">Generated: {{GENERATED_DATE}} | Vault: {{VAULT_PATH}}</p>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Knowledge Nodes</div>
+    <div class="stat-value accent">{{TOTAL_NOTES}}</div>
+    <div class="stat-detail">+{{NEW_THIS_WEEK}} this week</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Due Today</div>
+    <div class="stat-value orange">{{DUE_TODAY}}</div>
+    <div class="stat-detail">{{OVERDUE}} overdue</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Review Streak</div>
+    <div class="stat-value green">{{STREAK}} days</div>
+    <div class="stat-detail">Best: {{BEST_STREAK}} days</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Retention Rate</div>
+    <div class="stat-value purple">{{RETENTION}}%</div>
+    <div class="stat-detail">{{MATURE_NOTES}} mature notes</div>
+  </div>
+</div>
+
+<div class="charts-grid">
+  <div class="chart-card">
+    <h3>Knowledge Growth</h3>
+    <canvas id="growthChart"></canvas>
+  </div>
+  <div class="chart-card">
+    <h3>Topic Distribution</h3>
+    <canvas id="topicChart"></canvas>
+  </div>
+  <div class="chart-card">
+    <h3>Retention Curve</h3>
+    <canvas id="retentionChart"></canvas>
+  </div>
+  <div class="chart-card">
+    <h3>Upcoming Reviews (14 days)</h3>
+    <canvas id="upcomingChart"></canvas>
+  </div>
+</div>
+
+<div class="chart-card" style="margin-bottom: 32px;">
+  <h3>Review Activity (last 12 weeks)</h3>
+  <div class="heatmap-grid" id="heatmap"></div>
+</div>
+
+<div class="recommendations">
+  <h3>Recommendations</h3>
+  <!-- {{RECOMMENDATIONS_START}} -->
+  <div class="rec-item">
+    <span class="rec-icon">&#x1F4A1;</span>
+    <div class="rec-text"><strong>Focus area:</strong> {{REC_FOCUS}}</div>
+  </div>
+  <div class="rec-item">
+    <span class="rec-icon">&#x1F525;</span>
+    <div class="rec-text"><strong>Streak alert:</strong> {{REC_STREAK}}</div>
+  </div>
+  <div class="rec-item">
+    <span class="rec-icon">&#x1F517;</span>
+    <div class="rec-text"><strong>Connections:</strong> {{REC_CONNECTIONS}}</div>
+  </div>
+  <!-- {{RECOMMENDATIONS_END}} -->
+</div>
+
+<div class="footer">
+  LearnClaw - AI-Powered Learning | Built on OpenClaw | github.com/mathpresso/learnclaw
+</div>
+
+<script>
+// Data injected by learn-analytics skill
+const DATA = {
+  growth: {
+    labels: [{{GROWTH_LABELS}}],
+    values: [{{GROWTH_VALUES}}]
+  },
+  topics: {
+    labels: [{{TOPIC_LABELS}}],
+    values: [{{TOPIC_VALUES}}],
+    colors: ['#58a6ff','#3fb950','#d29922','#f85149','#bc8cff','#f778ba','#79c0ff','#a5d6ff']
+  },
+  retention: {
+    labels: [{{RETENTION_LABELS}}],
+    values: [{{RETENTION_VALUES}}]
+  },
+  upcoming: {
+    labels: [{{UPCOMING_LABELS}}],
+    values: [{{UPCOMING_VALUES}}]
+  },
+  heatmap: [{{HEATMAP_VALUES}}]
+};
+
+const chartDefaults = {
+  color: '#8b949e',
+  borderColor: '#30363d',
+  font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' }
+};
+Chart.defaults.color = chartDefaults.color;
+Chart.defaults.borderColor = chartDefaults.borderColor;
+
+// Knowledge Growth (line)
+new Chart(document.getElementById('growthChart'), {
+  type: 'line',
+  data: {
+    labels: DATA.growth.labels,
+    datasets: [{
+      label: 'Total Notes',
+      data: DATA.growth.values,
+      borderColor: '#58a6ff',
+      backgroundColor: 'rgba(88,166,255,0.1)',
+      fill: true,
+      tension: 0.3,
+      pointRadius: 3
+    }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+
+// Topic Distribution (doughnut)
+new Chart(document.getElementById('topicChart'), {
+  type: 'doughnut',
+  data: {
+    labels: DATA.topics.labels,
+    datasets: [{
+      data: DATA.topics.values,
+      backgroundColor: DATA.topics.colors.slice(0, DATA.topics.labels.length),
+      borderWidth: 0
+    }]
+  },
+  options: { plugins: { legend: { position: 'right' } } }
+});
+
+// Retention Curve (line)
+new Chart(document.getElementById('retentionChart'), {
+  type: 'line',
+  data: {
+    labels: DATA.retention.labels,
+    datasets: [{
+      label: 'Retention %',
+      data: DATA.retention.values,
+      borderColor: '#3fb950',
+      backgroundColor: 'rgba(63,185,80,0.1)',
+      fill: true,
+      tension: 0.3,
+      pointRadius: 3
+    }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100 } } }
+});
+
+// Upcoming Reviews (bar)
+new Chart(document.getElementById('upcomingChart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.upcoming.labels,
+    datasets: [{
+      label: 'Reviews Due',
+      data: DATA.upcoming.values,
+      backgroundColor: '#bc8cff',
+      borderRadius: 4
+    }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+
+// Heatmap
+const heatmapEl = document.getElementById('heatmap');
+const levels = ['', 'l1', 'l2', 'l3', 'l4'];
+DATA.heatmap.forEach(v => {
+  const cell = document.createElement('div');
+  cell.className = 'heatmap-cell ' + (levels[Math.min(v, 4)] || '');
+  heatmapEl.appendChild(cell);
+});
+</script>
+</body>
+</html>

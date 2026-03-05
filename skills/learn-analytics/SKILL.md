@@ -28,7 +28,7 @@ Visualize your learning journey with data-driven insights.
 
 ## What it does
 
-1. Scans vault for all notes with learning metadata (sr_* frontmatter)
+1. Scans vault for all notes with learning metadata (sr\_\* frontmatter)
 2. Calculates learning statistics and trends
 3. Generates an HTML dashboard with interactive charts
 4. Provides actionable recommendations
@@ -36,17 +36,20 @@ Visualize your learning journey with data-driven insights.
 ## Metrics Tracked
 
 ### Core Metrics
+
 - **Total knowledge nodes**: count of notes with sr_metadata
 - **Notes due today**: notes where sr_due <= today
 - **Review streak**: consecutive days with at least 1 review
 - **Retention rate**: % of reviews with quality >= 3
 
 ### Growth Metrics
+
 - **Notes created per week**: knowledge acquisition rate
 - **Connections per note**: average wikilinks (knowledge density)
 - **Topic distribution**: breakdown by tags
 
 ### Health Metrics
+
 - **Overdue notes**: notes past their sr_due date
 - **Struggling notes**: notes with sr_ease < 2.0
 - **Mature notes**: notes with sr_interval > 30 days
@@ -64,26 +67,32 @@ Visualize your learning journey with data-driven insights.
 
 ## Dashboard Generation
 
-Generate an HTML file at `Knowledge/Analytics/dashboard.html`:
+Use the template at `skills/learn-analytics/dashboard-template.html` to generate `Knowledge/Analytics/dashboard.html`.
 
-```html
-<!-- Self-contained HTML with inline CSS + Chart.js via CDN -->
-<!-- Charts: -->
-<!-- 1. Knowledge Growth (line chart: notes over time) -->
-<!-- 2. Topic Distribution (donut chart) -->
-<!-- 3. Review Calendar (heatmap like GitHub contributions) -->
-<!-- 4. Retention Curve (line chart: % correct over time) -->
-<!-- 5. Difficulty Distribution (histogram of ease values) -->
-<!-- 6. Upcoming Reviews (bar chart: next 14 days) -->
-```
+1. Read the template file
+2. Replace all `{{PLACEHOLDER}}` tokens with computed data:
+   - `{{GENERATED_DATE}}`: current date/time
+   - `{{VAULT_PATH}}`: detected vault path
+   - `{{TOTAL_NOTES}}`, `{{NEW_THIS_WEEK}}`, `{{DUE_TODAY}}`, `{{OVERDUE}}`: note counts
+   - `{{STREAK}}`, `{{BEST_STREAK}}`: review streak days
+   - `{{RETENTION}}`, `{{MATURE_NOTES}}`: retention stats
+   - `{{GROWTH_LABELS}}`, `{{GROWTH_VALUES}}`: weekly note counts (quoted strings, numbers)
+   - `{{TOPIC_LABELS}}`, `{{TOPIC_VALUES}}`: tag distribution
+   - `{{RETENTION_LABELS}}`, `{{RETENTION_VALUES}}`: weekly retention %
+   - `{{UPCOMING_LABELS}}`, `{{UPCOMING_VALUES}}`: next 14 days review counts
+   - `{{HEATMAP_VALUES}}`: 84 integers (12 weeks x 7 days, 0-4 scale)
+   - `{{REC_FOCUS}}`, `{{REC_STREAK}}`, `{{REC_CONNECTIONS}}`: recommendation text
+3. Write the filled template to `Knowledge/Analytics/dashboard.html`
+4. Open it: `open Knowledge/Analytics/dashboard.html`
 
-Open dashboard: `open Knowledge/Analytics/dashboard.html`
+Charts included: Knowledge Growth (line), Topic Distribution (doughnut), Retention Curve (line), Upcoming Reviews (bar), Review Activity Heatmap (GitHub-style)
 
 ## Data Collection
 
 To gather stats, scan the vault:
 
 1. Find all notes with sr_metadata:
+
    ```bash
    obsidian-cli search-content "sr_due:"
    ```
@@ -104,19 +113,23 @@ Generate `Knowledge/Analytics/weekly-[date].md`:
 # Weekly Learning Report - [Date Range]
 
 ## Summary
+
 - New notes: X (+Y% from last week)
 - Reviews completed: X
 - Retention rate: X%
 - Streak: X days
 
 ## Top Topics This Week
+
 1. [Topic] - X new notes, Y reviews
 2. [Topic] - X new notes, Y reviews
 
 ## Struggling Areas
+
 - [[Note]] (ease: 1.5) - reviewed X times, still difficult
 
 ## Recommendations
+
 1. Focus on [topic] - several notes overdue
 2. Great progress on [topic] - consider exploring [related-topic]
 3. Review streak at risk - X notes due tomorrow
@@ -125,6 +138,7 @@ Generate `Knowledge/Analytics/weekly-[date].md`:
 ## Recommendations Engine
 
 Based on analytics, suggest:
+
 - **What to learn next**: topics with few notes but many references
 - **What to review**: high-value notes that are overdue
 - **What to connect**: isolated note clusters
